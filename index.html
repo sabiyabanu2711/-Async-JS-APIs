@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyPulse | Weather Forecast</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛅</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-icon">⛅</span>
+        <h1>SkyPulse Weather</h1>
+      </div>
+      <p class="tagline">Real-time weather forecast powered by Async JavaScript & Open-Meteo API</p>
+    </header>
+
+    <!-- Search Section -->
+    <section class="search-section">
+      <form id="search-form" class="search-form">
+        <div class="input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            type="text" 
+            id="city-input" 
+            placeholder="Search city (e.g. Chennai, London, Tokyo, New York)..." 
+            autocomplete="off"
+            required
+          />
+          <button type="button" id="clear-btn" class="clear-btn" title="Clear input" aria-label="Clear">✕</button>
+        </div>
+        <button type="submit" id="search-btn" class="btn btn-primary">Search</button>
+        <button type="button" id="geo-btn" class="btn btn-secondary" title="Use current location">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="geo-icon">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+          <span>Near Me</span>
+        </button>
+      </form>
+
+      <!-- Quick City Suggestions -->
+      <div class="quick-cities">
+        <span class="quick-label">Popular:</span>
+        <button class="city-chip" data-city="Chennai">Chennai</button>
+        <button class="city-chip" data-city="Bangalore">Bangalore</button>
+        <button class="city-chip" data-city="London">London</button>
+        <button class="city-chip" data-city="New York">New York</button>
+        <button class="city-chip" data-city="Tokyo">Tokyo</button>
+        <button class="city-chip" data-city="Dubai">Dubai</button>
+      </div>
+    </section>
+
+    <!-- Unit Toggle -->
+    <div class="unit-switch-container">
+      <span class="unit-label">Display Unit:</span>
+      <div class="unit-toggle" id="unit-toggle">
+        <button class="unit-btn active" data-unit="c">°C</button>
+        <button class="unit-btn" data-unit="f">°F</button>
+      </div>
+    </div>
+
+    <!-- MAIN DISPLAY AREA (Managed through 3 distinct UI states) -->
+    <main id="main-content" class="main-content">
+      
+      <!-- 1. INITIAL / EMPTY STATE -->
+      <div id="initial-state" class="state-card initial-view">
+        <div class="state-illustration">🌍</div>
+        <h2>Discover Weather Anywhere</h2>
+        <p>Type a city name above or select one of the popular cities to get live weather data.</p>
+      </div>
+
+      <!-- 2. LOADING STATE -->
+      <div id="loading-state" class="state-card loading-view hidden" aria-live="polite">
+        <div class="spinner"></div>
+        <p class="loading-text">Fetching current weather data...</p>
+        <span class="loading-sub">Connecting to Open-Meteo REST API</span>
+      </div>
+
+      <!-- 3. ERROR STATE -->
+      <div id="error-state" class="state-card error-view hidden" role="alert">
+        <div class="error-icon">⚠️</div>
+        <h3 id="error-title">Unable to fetch weather</h3>
+        <p id="error-message">We couldn't find the location you requested. Please check spelling and try again.</p>
+        <div class="error-actions">
+          <button id="retry-btn" class="btn btn-outline">Try Again</button>
+          <button id="demo-btn" class="btn btn-secondary">Load Demo Preview</button>
+        </div>
+      </div>
+
+      <!-- 4. SUCCESS STATE (Weather Display) -->
+      <div id="weather-display" class="weather-display hidden">
+        <!-- Current Weather Card -->
+        <article class="card current-weather-card">
+          <div class="location-header">
+            <div>
+              <h2 id="location-name" class="location-name">--</h2>
+              <p id="location-country" class="location-country">--</p>
+            </div>
+            <div id="current-time-badge" class="time-badge">--</div>
+          </div>
+
+          <div class="current-main">
+            <div class="temp-section">
+              <span id="weather-emoji" class="large-weather-icon">☀️</span>
+              <div class="temp-wrapper">
+                <span id="current-temp" class="current-temp">--</span>
+                <span class="temp-unit" id="display-temp-unit">°C</span>
+              </div>
+            </div>
+            <div class="condition-section">
+              <p id="weather-description" class="weather-desc">Clear Sky</p>
+              <p class="feels-like">Feels like <strong id="feels-like-temp">--</strong></p>
+            </div>
+          </div>
+
+          <!-- Weather Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <span class="metric-icon">💧</span>
+              <div>
+                <span class="metric-label">Humidity</span>
+                <p id="metric-humidity" class="metric-value">--</p>
+              </div>
+            </div>
+
+            <div class="metric-item">
+              <span class="metric-icon">💨</span>
+              <div>
+                <span class="metric-label">Wind Speed</span>
+                <p id="metric-wind" class="metric-value">--</p>
+              </div>
+            </div>
+
+            <div class="metric-item">
+              <span class="metric-icon">🌧️</span>
+              <div>
+                <span class="metric-label">Precipitation</span>
+                <p id="metric-rain" class="metric-value">--</p>
+              </div>
+            </div>
+
+            <div class="metric-item">
+              <span class="metric-icon">👁️</span>
+              <div>
+                <span class="metric-label">Day/Night</span>
+                <p id="metric-daytime" class="metric-value">--</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5-Day Forecast Section -->
+        <section class="forecast-section">
+          <h3 class="forecast-title">5-Day Forecast</h3>
+          <div id="forecast-grid" class="forecast-grid">
+            <!-- Dynamically populated by JS -->
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Week 2 Project &bull; Built with Vanilla JavaScript, <code>fetch()</code> &amp; async/await</p>
+      <p class="footer-sub">Data source: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo Public API</a> (Free, No Key Required)</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
